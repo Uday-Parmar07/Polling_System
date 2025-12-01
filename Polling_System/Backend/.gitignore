@@ -1,0 +1,18 @@
+# Backend (Node)
+node_modules/
+npm-debug.log*
+backend.log
+.env
+.env.*
+.DS_Store
+
+# Dist / build
+dist/
+
+# Logs
+logs/
+*.log
+
+# IDE
+.vscode/
+.idea/
