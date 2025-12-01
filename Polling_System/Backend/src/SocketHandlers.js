@@ -13,7 +13,12 @@ module.exports = function(io, socket, PollManager) {
     socket.join(pollId);
     // add student only if role is 'student'
     if (role === 'student') {
-      PollManager.addStudent(pollId, socket.id, name || 'Anonymous');
+      const p = PollManager.addStudent(pollId, socket.id, name || 'Anonymous');
+      if (!p) {
+        // poll not found; inform client
+        socket.emit('join_error', { reason: 'poll-not-found' });
+        return;
+      }
     }
     // ack join
     socket.emit('joined_poll', { pollId });

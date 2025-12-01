@@ -23,6 +23,7 @@ module.exports = {
       started: false,
       ended: false,
       students: {}, // socketId -> { name, answeredOptionId }
+      votesHistory: [], // [{ socketId, name, optionId, ts }]
       timer: null,
       endTime: null
     };
@@ -88,6 +89,10 @@ module.exports = {
     if (!opt) return { ok: false, reason: 'invalid-option' };
     opt.votes += 1;
     student.answeredOptionId = optionId;
+    student.answeredAt = Date.now();
+
+    // record history for audit
+    p.votesHistory.push({ socketId, name: student.name, optionId, ts: student.answeredAt });
 
     // emit live update
     this._broadcastUpdate(pollId);

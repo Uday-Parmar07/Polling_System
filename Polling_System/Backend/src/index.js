@@ -79,6 +79,25 @@ app.get('/polls/:pollId', (req, res) => {
   return res.json({ ok: true, poll: sanitizePoll(p) });
 });
 
+// REST: Get votes history (teacher view)
+app.get('/polls/:pollId/votes', (req, res) => {
+  const { pollId } = req.params;
+  const p = PollManager.getPoll(pollId);
+  if (!p) return res.status(404).json({ ok: false, reason: 'not-found' });
+  // return votesHistory as array of { socketId, name, optionId, ts }
+  const history = (p.votesHistory || []).map(v => ({ socketId: v.socketId, name: v.name, optionId: v.optionId, ts: v.ts }));
+  return res.json({ ok: true, votes: history });
+});
+
+// REST: Get joined students and their vote state
+app.get('/polls/:pollId/students', (req, res) => {
+  const { pollId } = req.params;
+  const p = PollManager.getPoll(pollId);
+  if (!p) return res.status(404).json({ ok: false, reason: 'not-found' });
+  const students = Object.entries(p.students || {}).map(([socketId, s]) => ({ socketId, name: s.name, answeredOptionId: s.answeredOptionId || null, answeredAt: s.answeredAt || null }));
+  return res.json({ ok: true, students });
+});
+
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: "*" } });
 

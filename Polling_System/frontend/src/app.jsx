@@ -156,11 +156,32 @@ function Student({ socketRef }) {
     // connect and emit join_poll
     try {
       await ensureConnected(socketRef.current)
-      socketRef.current.emit('join_poll', { pollId, name, role: 'student' })
+      const s = socketRef.current
+      // listen for join acknowledgement or error once
+      const joinedPromise = new Promise((resolve, reject) => {
+        function onJoined(data) {
+          resolve({ ok: true, data })
+        }
+        function onJoinError(err) {
+          resolve({ ok: false, err })
+        }
+        s.once('joined_poll', onJoined)
+        s.once('join_error', onJoinError)
+        // safety timeout
+        setTimeout(() => resolve({ ok: false, err: { reason: 'timeout' } }), 3000)
+      })
+      s.emit('join_poll', { pollId, name, role: 'student' })
+      const res = await joinedPromise
+      if (!res.ok) {
+        alert('Could not join poll: ' + (res.err && res.err.reason))
+        return
+      }
+      setJoined(true)
     } catch (e) {
       console.warn('Socket not connected; join_poll may not be received', e)
+      alert('Socket not connected')
+      return
     }
-    setJoined(true)
     // fetch current poll state
     const res = await fetch(`${SERVER}/polls/${pollId}`)
     const j = await res.json()
